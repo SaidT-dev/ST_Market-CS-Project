@@ -69,7 +69,7 @@ USE st_market;
 ```
 
 ### Step 2: Configure Connection
-1. open "src/dao/DBConnection.java"
+1. open `src/dao/DBConnection.java`
 2. update the redentials to match your local MySQL setup:
 
 ```java
@@ -80,7 +80,7 @@ private static final String PASSWORD = "your_password";
 
 ### Step 3: Run the Application
 1. Open the project in your IDE.
-2. Locate the main class (e.g., (Main.java) or (LoginFrame.java)).
+2. Locate the main class (e.g., `Main.java` or `LoginFrame.java`).
 3. Run the application.
 
 ---
@@ -88,23 +88,23 @@ private static final String PASSWORD = "your_password";
 ## 🧠 Architecture Design
 This project follows the DAO (Data Access Object) Pattern:
 - **View (GUI):** `JFrame` and `JPanel` classes handling user interaction.
-- **Model (POJO):** Simple Java classes representing database tables (e.g., (Product.java), (User.java)).
-- **DAO Layer:** Handles raw SQL queries (e.g., (ProductDAO.java), (UserDAO.java)).
-- **Service Layer:** Handles business logic and transactions (e.g., (SalesService.java)).
+- **Model (POJO):** Simple Java classes representing database tables (e.g., `Product.java`, `User.java`).
+- **DAO Layer:** Handles raw SQL queries (e.g., `ProductDAO.java`, `UserDAO.java`).
+- **Service Layer:** Handles business logic and transactions (e.g., `SalesService.java`).
 
 ---
 
 ## 🔮 Future Improvements
-[ ] **Barcode Scanner:** Add support for physical barcode scanners via USB input.
-[ ] **Reports:** Implement PDF export for daily and monthly sales reports.
-[ ] **Cloud Sync:** Add support for a cloud database (AWS RDS/Firebase) for remote management.
-[ ] **Localization:** Support multiple languages (English, French, Arabic).
+- [ ] **Barcode Scanner:** Add support for physical barcode scanners via USB input.
+- [ ] **Reports:** Implement PDF export for daily and monthly sales reports.
+- [ ] **Cloud Sync:** Add support for a cloud database (AWS RDS/Firebase) for remote management.
+- [ ] **Localization:** Support multiple languages (English, French, Arabic).
 
 
 ---
-##👤 Author
+## 👤 Author
 
-**Your Name Here**
+**Said Tadjine**
 
 * [LinkedIn Profile](https://www.linkedin.com/in/said-tadjine)
 * [GitHub Profile](https://github.com/SaidT-dev)
