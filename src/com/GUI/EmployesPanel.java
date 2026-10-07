@@ -1,6 +1,5 @@
 package com.GUI;
 
-import com.formdev.flatlaf.FlatClientProperties;
 import com.model.Employe;
 import com.service.EmployeService;
 
@@ -91,7 +90,8 @@ public class EmployesPanel extends JPanel {
                 if (e.getClickCount() == 2) {
                     int selectedRow = table.getSelectedRow();
                     if (selectedRow >= 0) {
-                        Employe selectedEmploye = employes.get(selectedRow);
+                        int modelRow = table.convertRowIndexToModel(selectedRow);
+                        Employe selectedEmploye = employes.get(modelRow);
                         Frame parent = (Frame) SwingUtilities.getWindowAncestor(EmployesPanel.this);
                         new EmployeFormDiag(parent, EmployesPanel.this, selectedEmploye).setVisible(true);
                     }
@@ -115,7 +115,7 @@ public class EmployesPanel extends JPanel {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) return;
 
-        Employe selectedEmploye = employes.get(selectedRow);
+        Employe selectedEmploye = employes.get(table.convertRowIndexToModel(selectedRow));
 
         int confirmation = JOptionPane.showConfirmDialog(
                 this,

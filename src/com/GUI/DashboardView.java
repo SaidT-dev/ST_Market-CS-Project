@@ -13,7 +13,7 @@ public class DashboardView extends JFrame {
     public DashboardView(Employe currentUser) {
         this.currentUser = currentUser;
         try {
-            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/img/logo500.png"));
+            ImageIcon icon = new ImageIcon(getClass().getResource("/ressources/img/logo500.png"));
             setIconImage(icon.getImage());
         } catch (Exception e) {
             System.err.println("Icône introuvable");
@@ -69,10 +69,7 @@ public class DashboardView extends JFrame {
         btnInventory.addActionListener(e -> cardLayout.show(contentArea, "INVENTORY"));
 
         JButton btnSales = createMenuButton("Ventes", "/ressources/icons/shopping-cart.png");
-        btnSales.addActionListener(e -> {
-            contentArea.add(new com.GUI.SalesPanel(currentUser), "POS");
-            cardLayout.show(contentArea, "POS");
-        });
+        btnSales.addActionListener(e -> cardLayout.show(contentArea, "POS"));
 
         JButton btnEmployees = createMenuButton("Employés", "/ressources/icons/id-card.png");
         btnEmployees.addActionListener(e -> cardLayout.show(contentArea, "EMPLOYEES"));

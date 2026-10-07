@@ -29,7 +29,7 @@ public class SaleService {
 
         try {
             connection = DBConnectionManager.getInstance().getConnection();
-            connection.setAutoCommit(false); // DÉBUT TRANSACTION
+            connection.setAutoCommit(false);
 
             ProductDAO transacProductDAO = new ProductDAO(connection);
             SaleDAO transacSaleDAO = new SaleDAO(connection);
@@ -41,8 +41,7 @@ public class SaleService {
                     throw new InsufficientStockException("Stock insuffisant : " + product.getProductName());
                 }
 
-                int newQty = product.getStock().getCurrentQuantity() - saleDetail.getQuantitySold();
-                transacProductDAO.updateStock(product.getProductId(), newQty);
+                transacProductDAO.updateStock(product.getProductId(), -saleDetail.getQuantitySold());
             }
 
             Sale insertedSale = transacSaleDAO.insertSale(sale);
@@ -50,12 +49,13 @@ public class SaleService {
             connection.commit();
             return insertedSale;
 
+        } catch (InsufficientStockException e) {
+            try { if (connection != null) connection.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            throw e;
         } catch (SQLException e) {
-            // 6. Si erreur -> On annule tout
             try { if (connection != null) connection.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             throw new RuntimeException("Erreur Transaction : " + e.getMessage(), e);
         } finally {
-            // 7. On ferme la connexion proprement
             try { if (connection != null) connection.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
     }

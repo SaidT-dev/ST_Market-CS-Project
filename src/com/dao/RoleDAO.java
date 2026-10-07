@@ -11,22 +11,26 @@ public class RoleDAO {
     private Connection connection;
 
     public RoleDAO() {
-        try{
-            this.connection = DBConnectionManager.getInstance().getConnection();
-        } catch (SQLException e){
-            throw new RuntimeException("Erreur DAO : Impossible d'obtenir la connexion à la base de données.", e);
-        }
+        this.connection = DBConnectionManager.getInstance().getSharedConnection();
     }
 
     public Role insertRole(Role role){
-        String sql = "INSERT INTO ROLE (roleName) VALUES (?)";
+        String sql = role.getRoleId() > 0
+                ? "INSERT INTO ROLE (roleId, roleName) VALUES (?, ?)"
+                : "INSERT INTO ROLE (roleName) VALUES (?)";
 
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try{
             ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, role.getRoleName());
+
+            if (role.getRoleId() > 0) {
+                ps.setInt(1, role.getRoleId());
+                ps.setString(2, role.getRoleName());
+            } else {
+                ps.setString(1, role.getRoleName());
+            }
 
             int rowsAffected = ps.executeUpdate();
 
@@ -47,7 +51,6 @@ public class RoleDAO {
     }
 
     public Role getRoleById(int id) {
-        // Correction : Utiliser roleId dans la clause WHERE
         String sql = "SELECT * FROM ROLE WHERE roleId = ?";
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -123,7 +126,6 @@ public class RoleDAO {
     }
 
     public boolean deleteRole(int id) {
-        // Correction : Utiliser roleId dans la clause WHERE
         String sql = "DELETE FROM ROLE WHERE roleId = ?";
         PreparedStatement ps = null;
         boolean deleted = false;

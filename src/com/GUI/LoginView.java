@@ -15,6 +15,7 @@ public class LoginView extends JFrame {
     private EmployeService employeService;
     private JTextField fldUsername;
     private JPasswordField fldPassword;
+    private JButton btnLogin;
 
     public LoginView() {
         employeService = new EmployeService();
@@ -106,7 +107,7 @@ public class LoginView extends JFrame {
         gbc.insets = new Insets(0, 40, 30, 40);
         loginCard.add(fldPassword, gbc);
 
-        JButton btnLogin = new JButton("Se connecter");
+        btnLogin = new JButton("Se connecter");
         StyleUtils.applyPrimaryButtonStyle(btnLogin);
         btnLogin.setPreferredSize(new Dimension(0, 45));
         gbc.gridy = 7;
@@ -138,13 +139,36 @@ public class LoginView extends JFrame {
             return;
         }
 
-        Employe employe = employeService.login(user, pass);
+        btnLogin.setEnabled(false);
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-        if (employe != null) {
-            new DashboardView(employe).setVisible(true);
-            this.dispose();
-        } else {
-            JOptionPane.showMessageDialog(this, "Identifiants incorrects.", "Erreur", JOptionPane.ERROR_MESSAGE);
-        }
+        new SwingWorker<Employe, Void>() {
+            @Override
+            protected Employe doInBackground() {
+                return employeService.login(user, pass);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Employe employe = get();
+
+                    if (employe != null) {
+                        new DashboardView(employe).setVisible(true);
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(LoginView.this, "Identifiants incorrects.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    String message = cause.getMessage() != null ? cause.getMessage() : ex.toString();
+                    JOptionPane.showMessageDialog(LoginView.this, "Erreur : " + message, "Erreur", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                } finally {
+                    btnLogin.setEnabled(true);
+                    setCursor(Cursor.getDefaultCursor());
+                }
+            }
+        }.execute();
     }
 }

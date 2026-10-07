@@ -25,6 +25,8 @@ public class Sale {
         this.totalPrice = totalPrice;
         this.givenByClient = givenByClient;
         this.changeToReturn = changeToReturn;
+        this.cashier = cashier;
+        this.saleDetails = saleDetails;
     }
 
     @Override

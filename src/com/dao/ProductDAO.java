@@ -13,11 +13,7 @@ public class ProductDAO {
     private Connection connection;
     
     public ProductDAO() {
-        try {
-            this.connection = DBConnectionManager.getInstance().getConnection();
-        } catch (SQLException e) {
-            throw new RuntimeException("Erreur DAO : Impossible d'obtenir la connexion à la base de données.", e);
-        }
+        this.connection = DBConnectionManager.getInstance().getSharedConnection();
     }
 
     public ProductDAO(Connection connection) {
@@ -57,15 +53,16 @@ public class ProductDAO {
             connection.commit();
 
         } catch (SQLException e){
-            if (e.getSQLState().equals("23000")) { // SQL state for integrity constraint violation
-                throw new SQLIntegrityConstraintViolationException(e);
-            }
             System.err.println("Erreur de transaction. Annulation... " + e.getMessage());
             try{
                 if(connection != null) connection.rollback();
             } catch (SQLException e1) {
                 System.err.println("Erreur lors du rollback : " + e1.getMessage());
             }
+            if ("23000".equals(e.getSQLState())) { // SQL state for integrity constraint violation
+                throw new SQLIntegrityConstraintViolationException(e);
+            }
+            throw e;
         } finally {
             DBConnectionManager.close(null, psProduct);
             DBConnectionManager.close(null, psStock);
@@ -146,7 +143,6 @@ public class ProductDAO {
     }
 
     public boolean updateProduct(Product product) {
-        // REQUÊTES pour les DEUX tables
         String sqlProduct = "UPDATE PRODUCT SET productName = ?, unitPrice = ? WHERE productId = ?";
         String sqlStock = "UPDATE STOCK SET currentQuantity = ?, minimalQuantity = ? WHERE productId = ?";
 
@@ -212,7 +208,6 @@ public class ProductDAO {
     }
 
     public boolean deleteProduct(long id) {
-        // REQUÊTES pour les TROIS tables
         String sqlSaleDetail = "DELETE FROM SALE_DETAIL WHERE productId = ?";
         String sqlStock = "DELETE FROM STOCK WHERE productId = ?";
         String sqlProduct = "DELETE FROM PRODUCT WHERE productId = ?";

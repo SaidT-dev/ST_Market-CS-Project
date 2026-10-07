@@ -1,6 +1,5 @@
 package com.GUI;
 
-import com.formdev.flatlaf.FlatClientProperties;
 import com.model.Product;
 import com.service.ProductService;
 

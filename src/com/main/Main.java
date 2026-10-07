@@ -1,6 +1,7 @@
 package com.main;
 import com.GUI.LoginView;
 
+import com.dao.RoleDAO;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.model.Employe;
 import com.model.Role;
@@ -19,6 +20,14 @@ public class Main {
         }
 
         try {
+            RoleDAO roleDAO = new RoleDAO();
+            if (roleDAO.getAllRole().isEmpty()) {
+                System.out.println("Initialisation des rôles...");
+                roleDAO.insertRole(new Role(1, "Manager"));
+                roleDAO.insertRole(new Role(2, "Caissier"));
+                roleDAO.insertRole(new Role(3, "Magasinier"));
+            }
+
             EmployeService employeService = new EmployeService();
             List<Employe> employes = employeService.getAllEmployes();
 
@@ -35,9 +44,15 @@ public class Main {
 
                 Employe registeredAdmin = employeService.RegisterEmploye(admin, "admin");
 
-                JOptionPane.showMessageDialog(null,
-                        "Premier lancement détecté !\n\nUn compte Administrateur a été créé :\nUser: " + registeredAdmin.getUsername() + "\nPass: admin",
-                        "Initialisation", JOptionPane.INFORMATION_MESSAGE);
+                if (registeredAdmin != null) {
+                    JOptionPane.showMessageDialog(null,
+                            "Premier lancement détecté !\n\nUn compte Administrateur a été créé :\nUser: " + registeredAdmin.getUsername() + "\nPass: admin",
+                            "Initialisation", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Premier lancement détecté !\n\nImpossible de créer le compte Administrateur.",
+                            "Initialisation", JOptionPane.WARNING_MESSAGE);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

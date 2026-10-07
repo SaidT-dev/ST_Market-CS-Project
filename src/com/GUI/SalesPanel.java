@@ -1,6 +1,5 @@
 package com.GUI;
 
-import com.GUI.StyleUtils;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.model.Employe;
 import com.model.Product;
@@ -37,7 +36,6 @@ public class SalesPanel extends JPanel {
     private JTextField txtCashGiven;
 
 
-    private Sale currentSale;
     private List<SaleDetail> currentCartDetails;
 
     public SalesPanel(Employe currentUser) {
@@ -272,6 +270,14 @@ public class SalesPanel extends JPanel {
 
             try {
                 BigDecimal given = new BigDecimal(txtCashGiven.getText().replace(",", "."));
+                BigDecimal total = calculateTotal();
+
+                if (given.compareTo(total) < 0) {
+                    JOptionPane.showMessageDialog(this,
+                            "Montant insuffisant. Total à payer : " + total + " DA",
+                            "Erreur", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
                 btnValidate.setEnabled(false);
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -279,14 +285,13 @@ public class SalesPanel extends JPanel {
                 new SwingWorker<Sale, Void>() {
                     @Override
                     protected Sale doInBackground() throws Exception {
-                        // Créer et peupler l'objet Sale ici
                         Sale saleToProcess = new Sale();
                         saleToProcess.setCashier(currentUser);
                         saleToProcess.setSaleDetails(currentCartDetails);
                         saleToProcess.setSaleDate(LocalDateTime.now());
-                        saleToProcess.setTotalPrice(calculateTotal());
+                        saleToProcess.setTotalPrice(total);
                         saleToProcess.setGivenByClient(given);
-                        saleToProcess.setChangeToReturn(given.subtract(saleToProcess.getTotalPrice()));
+                        saleToProcess.setChangeToReturn(given.subtract(total));
 
                         return saleService.createSale(saleToProcess);
                     }
@@ -294,7 +299,7 @@ public class SalesPanel extends JPanel {
                     @Override
                     protected void done() {
                         try {
-                            Sale completedSale = get(); // Récupérer la vente finalisée
+                            Sale completedSale = get();
 
                             String msg = String.format("Vente Validée !\n\nTotal: %s DA\nReçu: %s DA\n\nMONNAIE À RENDRE: %s DA",
                                     completedSale.getTotalPrice(), completedSale.getGivenByClient(), completedSale.getChangeToReturn());
@@ -305,11 +310,13 @@ public class SalesPanel extends JPanel {
                             loadProducts();
 
                         } catch (Exception ex) {
-                            JOptionPane.showMessageDialog(SalesPanel.this, "Erreur : " + ex.getCause().getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+                            Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                            String message = cause.getMessage() != null ? cause.getMessage() : ex.toString();
+                            JOptionPane.showMessageDialog(SalesPanel.this, "Erreur : " + message, "Erreur", JOptionPane.ERROR_MESSAGE);
                             ex.printStackTrace();
                         } finally {
                             btnValidate.setEnabled(true);
-                            setCursor(Cursor.getDefaultCursor()); // Curseur normal
+                            setCursor(Cursor.getDefaultCursor());
                         }
                     }
                 }.execute();
@@ -408,7 +415,7 @@ public class SalesPanel extends JPanel {
     private void updateCartItemQuantity(int row) {
         try {
             SaleDetail detail = currentCartDetails.get(row);
-            int newQuantity = Integer.parseInt(cartModel.getValueAt(row, 2).toString());
+            int newQuantity = Integer.parseInt(String.valueOf(cartModel.getValueAt(row, 2)).trim());
 
             int availableStock = detail.getProduct().getStock().getCurrentQuantity();
             if (newQuantity > availableStock) {

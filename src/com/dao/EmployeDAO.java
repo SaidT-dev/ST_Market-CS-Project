@@ -15,6 +15,11 @@ import java.util.List;
 
 public class EmployeDAO {
 
+    private Connection connection;
+
+    public EmployeDAO() {
+        this.connection = DBConnectionManager.getInstance().getSharedConnection();
+    }
 
 
     public Employe insertEmploye(Employe employe) {
@@ -44,9 +49,10 @@ public class EmployeDAO {
                     employe.setEmployeId(generatedId);
                 }
             }
-        } catch (SQLException e){ // Correction de la déclaration de l'exception
+        } catch (SQLException e){
             System.err.println("Erreur SQL lors de l'insertion de l'employé: " + e.getMessage());
             e.printStackTrace();
+            return null;
         } finally {
             DBConnectionManager.close(rs, ps);
         }
@@ -54,7 +60,6 @@ public class EmployeDAO {
     }
 
     public Employe getEmployeById(int id) {
-        // Fix: include ROLE join so extractEmployeFromResultSet can read roleName consistently
         String sql = "SELECT e.*, r.roleName FROM EMPLOYE e JOIN ROLE r ON e.roleId = r.roleId WHERE e.employeId = ?";
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -158,8 +163,8 @@ public class EmployeDAO {
             ps.setString(4, employe.getAddress());
             ps.setString(5, employe.getPhoneNumber());
             ps.setString(6, employe.getPasswordHash());
-            ps.setInt(7, employe.getRole().getRoleId()); // Correction de l'accès au RoleId
-            ps.setInt(8, employe.getEmployeId()); // Utilisation de getId()
+            ps.setInt(7, employe.getRole().getRoleId());
+            ps.setInt(8, employe.getEmployeId());
 
             if (ps.executeUpdate() > 0) {
                 updated = true;
@@ -174,14 +179,26 @@ public class EmployeDAO {
     }
 
     public boolean deleteEmploye(int id) {
+        String sqlSaleDetail = "DELETE sd FROM SALE_DETAIL sd JOIN SALE s ON sd.saleId = s.saleId WHERE s.cashierId = ?";
+        String sqlTicket = "DELETE t FROM TICKET t JOIN SALE s ON t.saleId = s.saleId WHERE s.cashierId = ?";
         String sqlSale = "DELETE FROM SALE WHERE cashierId = ?";
         String sqlEmploye = "DELETE FROM EMPLOYE WHERE employeId = ?";
+        PreparedStatement psSaleDetail = null;
+        PreparedStatement psTicket = null;
         PreparedStatement psSale = null;
         PreparedStatement psEmploye = null;
         boolean deleted = false;
 
         try {
             connection.setAutoCommit(false);
+
+            psSaleDetail = connection.prepareStatement(sqlSaleDetail);
+            psSaleDetail.setInt(1, id);
+            psSaleDetail.executeUpdate();
+
+            psTicket = connection.prepareStatement(sqlTicket);
+            psTicket.setInt(1, id);
+            psTicket.executeUpdate();
 
             psSale = connection.prepareStatement(sqlSale);
             psSale.setInt(1, id);
@@ -205,6 +222,8 @@ public class EmployeDAO {
                 ex.printStackTrace();
             }
         } finally {
+            DBConnectionManager.close(null, psSaleDetail);
+            DBConnectionManager.close(null, psTicket);
             DBConnectionManager.close(null, psSale);
             DBConnectionManager.close(null, psEmploye);
             try {

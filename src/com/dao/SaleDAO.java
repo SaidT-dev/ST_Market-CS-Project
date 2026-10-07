@@ -18,12 +18,8 @@ public class SaleDAO {
     private ProductDAO productDAO;
 
     public SaleDAO() {
-        try{
-            this.connection = DBConnectionManager.getInstance().getConnection();
-            this.productDAO = new ProductDAO();
-        } catch (SQLException e) {
-            throw new RuntimeException("Erreur DAO : Impossible d'obtenir la connexion à la base de données.", e);
-        }
+        this.connection = DBConnectionManager.getInstance().getSharedConnection();
+        this.productDAO = new ProductDAO();
     }
 
     public SaleDAO(Connection connection) {
@@ -127,10 +123,8 @@ public class SaleDAO {
             rs = ps.executeQuery();
 
             while (rs.next()) {
-                Sale sale = extractSaleAndCashierFromResultSet(rs);
-                List<SaleDetail> details = getSaleDetails(sale.getSaleId());
-                sale.setSaleDetails(details);
-                sales.add(sale);
+                // Détails non chargés ici (1 requête par vente) : les lire avec getSaleDetails(saleId).
+                sales.add(extractSaleAndCashierFromResultSet(rs));
             }
 
         } catch (SQLException e) {
@@ -172,7 +166,7 @@ public class SaleDAO {
 
             while (rs.next()) {
                 SaleDetail detail = new SaleDetail();
-                detail.setLigneId(rs.getInt("lignId"));
+                detail.setLigneId(rs.getInt("ligneId"));
                 detail.setQuantitySold(rs.getInt("quantitySold"));
                 detail.setUnitSoldPrice(rs.getBigDecimal("unitSoldPrice"));
 
@@ -193,23 +187,51 @@ public class SaleDAO {
     }
 
     public boolean deleteSale(int saleId) {
-        String sql = "DELETE FROM SALE WHERE saleId = ?";
-        PreparedStatement ps = null;
+        String sqlSaleDetail = "DELETE FROM SALE_DETAIL WHERE saleId = ?";
+        String sqlTicket = "DELETE FROM TICKET WHERE saleId = ?";
+        String sqlSale = "DELETE FROM SALE WHERE saleId = ?";
+        PreparedStatement psSaleDetail = null;
+        PreparedStatement psTicket = null;
+        PreparedStatement psSale = null;
         boolean deleted = false;
 
         try {
-            ps = connection.prepareStatement(sql);
-            ps.setInt(1, saleId);
+            connection.setAutoCommit(false);
 
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
+            psSaleDetail = connection.prepareStatement(sqlSaleDetail);
+            psSaleDetail.setInt(1, saleId);
+            psSaleDetail.executeUpdate();
+
+            psTicket = connection.prepareStatement(sqlTicket);
+            psTicket.setInt(1, saleId);
+            psTicket.executeUpdate();
+
+            psSale = connection.prepareStatement(sqlSale);
+            psSale.setInt(1, saleId);
+
+            if (psSale.executeUpdate() > 0) {
+                connection.commit();
                 deleted = true;
+            } else {
+                connection.rollback();
             }
 
         } catch (SQLException e) {
             System.err.println("Erreur SQL lors de la suppression de la vente (ID: " + saleId + "): " + e.getMessage());
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                System.err.println("Erreur lors du rollback : " + rollbackEx.getMessage());
+            }
         } finally {
-            DBConnectionManager.close(null, ps);
+            DBConnectionManager.close(null, psSaleDetail);
+            DBConnectionManager.close(null, psTicket);
+            DBConnectionManager.close(null, psSale);
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Erreur lors de la restauration de l'auto-commit: " + e.getMessage());
+            }
         }
         return deleted;
     }

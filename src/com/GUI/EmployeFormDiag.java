@@ -174,8 +174,8 @@ public class EmployeFormDiag extends JDialog{
     private void saveEmploye() {
         try {
             // Validation simple
-            if (txtFirstName.getText().isEmpty() || txtFamilyName.getText().isEmpty() || txtPassword.getPassword().length == 0) {
-                JOptionPane.showMessageDialog(this, "Nom, Prénom et Mot de passe sont obligatoires.", "Erreur", JOptionPane.WARNING_MESSAGE);
+            if (txtFirstName.getText().isEmpty() || txtFamilyName.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Le prénom et le nom sont obligatoires.", "Erreur", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -198,6 +198,11 @@ public class EmployeFormDiag extends JDialog{
             String pass = new String(txtPassword.getPassword());
 
             if (employeToUpdate == null) {
+                if (pass.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Le mot de passe est obligatoire.", "Erreur", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
                 // Appel Service (Génère username + hash password)
                 Employe created = employeService.RegisterEmploye(emp, pass);
 

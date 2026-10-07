@@ -79,6 +79,9 @@ public class EmployeService {
             }
         } else {
             Employe existingEmploye = employeDAO.getEmployeById(employe.getEmployeId());
+            if (existingEmploye == null) {
+                return false;
+            }
             employe.setPasswordHash(existingEmploye.getPasswordHash());
         }
         return employeDAO.updateEmploye(employe);

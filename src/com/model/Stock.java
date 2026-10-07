@@ -32,7 +32,7 @@ public class Stock{
     @Override
     public String toString() {
         return "Stock{" +
-                "stockId=" + productId +
+                "productId=" + productId +
                 ", currentQuantity=" + currentQuantity +
                 ", minimalQuantity=" + minimalQuantity +
                 '}';
